@@ -43,6 +43,54 @@ const DateDisplay: React.FC<DateDisplayProps> = ({ className }) => {
   return <p className={className}>{today}</p>;
 };
 
+type CountdownTimerProps = {
+  initialSeconds: number; // タイマーの初期値を秒単位で受け取る
+  className?: string;
+};
+const CountdownTimer: React.FC<CountdownTimerProps> = ({
+  initialSeconds,
+  className,
+}) => {
+  // 残り時間をstateで管理
+  const [seconds, setSeconds] = useState(initialSeconds);
+
+  useEffect(() => {
+    // 残り時間が0秒以下になったらタイマーを停止
+    if (seconds <= 0) {
+      return;
+    }
+    // 1秒ごとに残り時間を1ずつ減らす
+    const timerId = setInterval(() => {
+      setSeconds((prevSeconds) => prevSeconds - 1);
+    }, 1000);
+
+    // コンポーネントが不要になったらタイマーを解除
+    return () => clearInterval(timerId);
+  }, [seconds]); // secondsが変更されるたびにeffectを再実行
+
+  // 秒数を HH:MM:SS 形式の文字列に変換する関数
+  const formatTime = (totalSeconds: number): string => {
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const remainingSeconds = totalSeconds % 60;
+    return `${hours.toString().padStart(2, "0")}:${minutes
+      .toString()
+      .padStart(2, "0")}:${remainingSeconds.toString().padStart(2, "0")}`;
+  };
+
+  return (
+    <div className={className}>
+      {seconds > 0 ? (
+        // 残り時間がある場合は、フォーマットして表示
+        <p>{formatTime(seconds)}</p>
+      ) : (
+        // 残り時間が0になったらメッセージを表示
+        <p>時間です！</p>
+      )}
+    </div>
+  );
+};
+
 // ---ページコンポーネント---
 
 // ---起床前のホームページ---
@@ -90,11 +138,16 @@ const DashboardPage: React.FC = () => {
       }`}
     >
       <header className="mb-8">
-        <h1 className="text-4xl font-bold text-sky-300">ダッシュボード</h1>
-        <p className="text-slate-400">今日一日を始めましょう！</p>
+        <div className="bg-slate-800 p-4 rounded-lg text-center">
+          <h2 className="text-2xl font-bold mb-2">残り支度時間</h2>
+          <CountdownTimer
+            initialSeconds={3600} // 1時間 = 3600秒
+            className="text-5xl font-mono font-bold text-green-400"
+          />
+        </div>
       </header>
       <main className="flex-grow flex flex-col gap-6">
-        <div className="bg-slate-800 p-4 rounded-lg">
+        {/* <div className="bg-slate-800 p-4 rounded-lg">
           <h2 className="text-2xl font-bold mb-2">今日のタスク</h2>
           <ul className="list-disc list-inside text-slate-300">
             <li>メールをチェックする</li>
@@ -105,7 +158,7 @@ const DashboardPage: React.FC = () => {
         <div className="bg-slate-800 p-4 rounded-lg">
           <h2 className="text-2xl font-bold mb-2">天気予報</h2>
           <p className="text-slate-300">晴れ時々曇り、最高気温25℃</p>
-        </div>
+        </div> */}
       </main>
     </div>
   );
