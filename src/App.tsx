@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 
 // --- Clock コンポーネント ---
 // 現在時刻を1秒ごとに更新して表示するコンポーネント
-
 // Clockというコンポーネントが受け取る props（引数のようなもの）を定義
 type ClockDisplayProps = {
   className?: string;
@@ -44,33 +43,93 @@ const DateDisplay: React.FC<DateDisplayProps> = ({ className }) => {
   return <p className={className}>{today}</p>;
 };
 
-// --- App コンポーネント (スマホ表示最適化) ---
-function App() {
+// ---ページコンポーネント---
+
+// ---起床前のホームページ---
+type HomePageProps = {
+  onWakeUp: () => void; // ボタンが押されたことを親に伝えるための関数
+};
+
+const HomePage: React.FC<HomePageProps> = ({ onWakeUp }) => {
   return (
-    // 画面全体の高さを使い、Flexboxで3つのセクションを縦に均等配置します。
-    // text-centerで中のテキストを中央揃えにしています。
-    <main className="h-screen flex flex-col items-center justify-around bg-slate-900 text-white font-sans p-6 text-center">
-      {/* 1. 挨拶セクション */}
+    <div className="h-screen flex flex-col items-center justify-around text-center p-6">
       <div>
         <h1 className="text-4xl sm:text-5xl font-bold text-sky-300">
           おはようございます
         </h1>
       </div>
-
-      {/* 2. 日付と時計セクション */}
       <div className="flex flex-col items-center gap-4">
         <DateDisplay className="text-lg sm:text-xl font-semibold text-slate-400" />
         <Clock className="text-6xl sm:text-7xl font-mono font-bold tracking-wider text-slate-100" />
       </div>
-
-      {/* 3. ボタンセクション */}
       <div>
-        {/* ボタンを大きく、タップしやすく設定 */}
-        <button className="w-full max-w-xs px-8 py-4 bg-sky-500 text-white text-2xl font-bold rounded-xl shadow-lg transition-transform duration-200 transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 focus:ring-sky-300/50">
+        <button
+          onClick={onWakeUp} // 親から渡された関数を呼ぶ
+          className="w-full max-w-xs px-8 py-4 bg-sky-500 text-white text-2xl font-bold rounded-xl shadow-lg transition-transform duration-200 transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 focus:ring-sky-300/50"
+        >
           起床
         </button>
       </div>
-    </main>
+    </div>
+  );
+};
+
+// ---起床後のダッシュボードページ---
+const DashboardPage: React.FC = () => {
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    // マウントされた直後に visible を true にしてアニメーションを開始
+    const timer = setTimeout(() => setVisible(true), 10); // わずかな遅延でCSS transitionを確実に発火させる
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
+    <div
+      className={`h-screen flex flex-col p-6 transition-opacity duration-700 ease-in-out ${
+        visible ? "opacity-100" : "opacity-0"
+      }`}
+    >
+      <header className="mb-8">
+        <h1 className="text-4xl font-bold text-sky-300">ダッシュボード</h1>
+        <p className="text-slate-400">今日一日を始めましょう！</p>
+      </header>
+      <main className="flex-grow flex flex-col gap-6">
+        <div className="bg-slate-800 p-4 rounded-lg">
+          <h2 className="text-2xl font-bold mb-2">今日のタスク</h2>
+          <ul className="list-disc list-inside text-slate-300">
+            <li>メールをチェックする</li>
+            <li>プロジェクトAのドキュメント作成</li>
+            <li>チームミーティング (14:00)</li>
+          </ul>
+        </div>
+        <div className="bg-slate-800 p-4 rounded-lg">
+          <h2 className="text-2xl font-bold mb-2">天気予報</h2>
+          <p className="text-slate-300">晴れ時々曇り、最高気温25℃</p>
+        </div>
+      </main>
+    </div>
+  );
+};
+
+// --- App コンポーネント (スマホ表示最適化) ---
+function App() {
+  // 'home' か 'dashboard' のどちらかを表示するかを管理
+  const [view, setView] = useState<"home" | "dashboard">("home");
+
+  // 起床ボタンが押されたらviewを'dashboard'に切り替える
+  const handleWakeUp = () => {
+    setView("dashboard");
+  };
+
+  return (
+    <div className="bg-slate-900 text-white font-sans">
+      {/* viewの状態に応じて表示するコンポーネントを切り替える */}
+      {view === "home" ? (
+        <HomePage onWakeUp={handleWakeUp} />
+      ) : (
+        <DashboardPage />
+      )}
+    </div>
   );
 }
 
